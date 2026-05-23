@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Today's Menu</title>
+  <style>
+    /* ── CSS Variables ─────────────────────────────────────────── */
+    :root {
+      --accent: #6a9f7a;
+      --accent-light: #e8f2eb;
+      --accent-dark: #4d7a5c;
+      --bg: #f7f8f6;
+      --card: #ffffff;
+      --text: #2c2c2c;
+      --muted: #7a8a7d;
+      --border: #dde8df;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(106, 159, 122, 0.10);
+    }
+
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 28px 20px 22px;
+      text-align: center;
+      position: relative;
+    }
+
+    header h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header .subtitle {
+      font-size: 0.88rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    #today-date {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.18);
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+    }
+
+    /* ── Main Container ────────────────────────────────────────── */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ── Status / Error Banner ─────────────────────────────────── */
+    #status-bar {
+      display: none;
+      margin: 16px 0 0;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      line-height: 1.4;
+    }
+
+    #status-bar.error {
+      display: block;
+      background: #fdecea;
+      color: #b33a3a;
+      border: 1px solid #f5c5c0;
+    }
+
+    #status-bar.loading {
+      display: block;
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Section Title ─────────────────────────────────────────── */
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 24px 0 10px;
+    }
+
+    /* ── Today's Meal Cards ────────────────────────────────────── */
+    .meal-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .meal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .meal-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 18px rgba(106, 159, 122, 0.15);
+    }
+
+    .meal-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .meal-info {
+      flex: 1;
+    }
+
+    .meal-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--accent-dark);
+      margin-bottom: 3px;
+    }
+
+    .meal-name {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .meal-empty {
+      color: var(--muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    /* ── Action Buttons ────────────────────────────────────────── */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin: 22px 0 0;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 11px 20px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.18s ease, transform 0.12s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+    }
+
+    .btn-outline {
+      background: var(--card);
+      color: var(--accent-dark);
+      border: 1.5px solid var(--accent);
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-light);
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Full Week Section ─────────────────────────────────────── */
+    #week-section {
+      display: none;
+    }
+
+    #week-section.visible {
+      display: block;
+    }
+
+    .week-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .day-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .day-row.today-row {
+      border-color: var(--accent);
+      border-width: 2px;
+    }
+
+    .day-header {
+      background: var(--accent-light);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .day-row.today-row .day-header {
+      background: var(--accent);
+    }
+
+    .day-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+
+    .day-row.today-row .day-name {
+      color: #fff;
+    }
+
+    .today-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .day-meals {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      divide-gap: 0;
+    }
+
+    .day-meal-slot {
+      padding: 11px 14px;
+      border-right: 1px solid var(--border);
+    }
+
+    .day-meal-slot:last-child {
+      border-right: none;
+    }
+
+    .day-meal-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .day-meal-name {
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .day-meal-name.empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ── Last Updated ──────────────────────────────────────────── */
+    #last-updated {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 28px;
+    }
+
+    /* ── Skeleton / Loading State ──────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8f2eb 25%, #d8ecdd 50%, #e8f2eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      height: 1em;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 400px) {
+      header h1 {
+        font-size: 1.45rem;
+      }
+
+      .meal-card {
+        padding: 14px 16px;
+      }
+
+      .day-meal-slot {
+        padding: 9px 10px;
+      }
+
+      .day-meal-name {
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <h1>🌿 Today's Menu</h1>
+    <div class="subtitle">Fresh meals, every day</div>
+    <div id="today-date">Loading…</div>
+  </header>
+
+  <main>
+
+    <!-- Status bar (loading / error) -->
+    <div id="status-bar"></div>
+
+    <!-- ── Today's Meals ──────────────────────────────────────── -->
+    <p class="section-title">Today's Meals</p>
+    <div class="meal-cards" id="today-cards">
+      <!-- Skeleton placeholders shown before data loads -->
+      <div class="meal-card">
+        <div class="meal-icon">🌅</div>
+        <div class="meal-info">
+          <div class="meal-label">Breakfast</div>
+          <div class="meal-name skeleton" style="width:60%">&nbsp;</div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-icon">☀️</div>
+        <div class="meal-info">
+          <div class="meal-label">Lunch</div>
+          <div class="meal-name skeleton" style="width:70%">&nbsp;</div>
+        </div>
+      </div>
+      <div class="meal-card">
+        <div class="meal-icon">🌙</div>
+        <div class="meal-info">
+          <div class="meal-label">Dinner</div>
+          <div class="meal-name skeleton" style="width:55%">&nbsp;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Action Buttons ─────────────────────────────────────── -->
+    <div class="actions">
+      <button class="btn btn-outline" id="toggle-week-btn" onclick="toggleWeek()">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        View Full Week
+      </button>
+      <button class="btn btn-primary" onclick="refreshData()">
+        <svg viewBox="0 0 24 24">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- ── Full Week ──────────────────────────────────────────── -->
+    <div id="week-section">
+      <p class="section-title">Full Week</p>
+      <div class="week-grid" id="week-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <div id="last-updated"></div>
+
+  </main>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────
+    //  ⚙️  CONFIGURATION
+    //  To change the sheet, paste the new Sheet ID from the URL:
+    //  https://docs.google.com/spreadsheets/d/ SHEET_ID /edit
+    // ─────────────────────────────────────────────────────────────
+    const SHEET_ID = "1Pslj3ctRNxi8wWwbXT5zGKhMEtCLOiIzcelAm4cuygQ";
+    // ─────────────────────────────────────────────────────────────
+
+    const CACHE_KEY     = "todaysMenuCache";
+    const CACHE_TS_KEY  = "todaysMenuCacheTS";
+    const AUTO_REFRESH_MS = 2.5 * 60 * 60 * 1000; // 2.5 hours
+
+    const DAY_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+    // ── Helpers ────────────────────────────────────────────────────
+    function todayName() {
+      return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+    }
+    function formatDate(d) {
+      return d.toLocaleDateString("en-US", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    }
+
+    // ── JSONP fetch via Google Visualization API ───────────────────
+    // Uses a <script> tag so it works when the page is opened locally
+    // (file://) without any CORS issues.
+    function fetchSheetData() {
+      return new Promise((resolve, reject) => {
+        const cbName = "_menuCb_" + Date.now();
+        const script  = document.createElement("script");
+        const timer   = setTimeout(() => {
+          cleanup();
+          reject(new Error("Request timed out after 10 s"));
+        }, 10000);
+
+        function cleanup() {
+          clearTimeout(timer);
+          delete window[cbName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = function(raw) {
+          cleanup();
+          try {
+            const table = raw.table;
+            if (!table) { reject(new Error("Empty response from Google Sheets")); return; }
+
+            // Try label-based detection first, fall back to first-data-row detection,
+            // then fall back to positional (A=Day, B=Breakfast, C=Lunch, D=Dinner).
+            const colMeta = table.cols.map(c => (c.label || "").trim().toLowerCase().replace(/\s+/g,""));
+            let dayIdx = colMeta.findIndex(c => c.includes("day"));
+            let bIdx   = colMeta.findIndex(c => c.includes("breakfast"));
+            let lIdx   = colMeta.findIndex(c => c.includes("lunch"));
+            let dIdx   = colMeta.findIndex(c => c.includes("dinner"));
+
+            // If labels are blank, check the first row's values for header text
+            if ([dayIdx,bIdx,lIdx,dIdx].some(i => i < 0) && table.rows && table.rows.length > 0) {
+              const firstRow = (table.rows[0].c || []).map(c => (c?.v || "").toString().trim().toLowerCase().replace(/\s+/g,""));
+              const fd = firstRow.findIndex(c => c.includes("day"));
+              const fb = firstRow.findIndex(c => c.includes("breakfast"));
+              const fl = firstRow.findIndex(c => c.includes("lunch"));
+              const fdinner = firstRow.findIndex(c => c.includes("dinner"));
+              if ([fd,fb,fl,fdinner].every(i => i >= 0)) {
+                // First row IS the header row — skip it and use its indices
+                dayIdx = fd; bIdx = fb; lIdx = fl; dIdx = fdinner;
+                table.rows = table.rows.slice(1);
+              }
+            }
+
+            // Last resort: assume standard column order A=Day B=Breakfast C=Lunch D=Dinner
+            if ([dayIdx,bIdx,lIdx,dIdx].some(i => i < 0)) {
+              dayIdx = 0; bIdx = 1; lIdx = 2; dIdx = 3;
+            }
+
+            const data = (table.rows || []).map(r => ({
+              day:       (r.c?.[dayIdx]?.v ?? "").toString().trim(),
+              breakfast: (r.c?.[bIdx]?.v   ?? "").toString().trim(),
+              lunch:     (r.c?.[lIdx]?.v   ?? "").toString().trim(),
+              dinner:    (r.c?.[dIdx]?.v   ?? "").toString().trim(),
+            })).filter(r => r.day);
+
+            if (data.length === 0) { reject(new Error("No rows found in sheet")); return; }
+            resolve(data);
+          } catch(e) {
+            reject(e);
+          }
+        };
+
+        script.onerror = () => { cleanup(); reject(new Error("Could not reach Google Sheets. Check your internet connection and make sure the sheet is shared as 'Anyone with the link'.")); };
+        script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&headers=1`;
+        document.head.appendChild(script);
+      });
+    }
+
+    // ── Status Bar ─────────────────────────────────────────────────
+    function setStatus(msg, type) {
+      const bar = document.getElementById("status-bar");
+      bar.className = type || "";
+      bar.textContent = msg || "";
+      bar.style.display = msg ? "" : "none";
+    }
+
+    // ── Render Today ───────────────────────────────────────────────
+    function renderToday(data) {
+      const day  = todayName();
+      const row  = data.find(r => r.day.trim().toLowerCase() === day.toLowerCase());
+      const wrap = document.getElementById("today-cards");
+      const meals = [
+        { label:"Breakfast", icon:"🌅", value: row?.breakfast },
+        { label:"Lunch",     icon:"☀️", value: row?.lunch     },
+        { label:"Dinner",    icon:"🌙", value: row?.dinner    },
+      ];
+      wrap.innerHTML = meals.map(m => `
+        <div class="meal-card">
+          <div class="meal-icon">${m.icon}</div>
+          <div class="meal-info">
+            <div class="meal-label">${m.label}</div>
+            <div class="meal-name ${m.value ? "" : "meal-empty"}">${m.value || "Not set"}</div>
+          </div>
+        </div>`).join("");
+    }
+
+    // ── Render Week ────────────────────────────────────────────────
+    function renderWeek(data) {
+      const today = todayName();
+      const grid  = document.getElementById("week-grid");
+      const sorted = [...data].sort((a,b) => {
+        const ai = DAY_ORDER.indexOf(a.day.trim());
+        const bi = DAY_ORDER.indexOf(b.day.trim());
+        return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+      });
+      grid.innerHTML = sorted.map(row => {
+        const isToday = row.day.trim().toLowerCase() === today.toLowerCase();
+        return `
+          <div class="day-row ${isToday ? "today-row" : ""}">
+            <div class="day-header">
+              <span class="day-name">${row.day}</span>
+              ${isToday ? '<span class="today-badge">Today</span>' : ""}
+            </div>
+            <div class="day-meals">
+              ${["breakfast","lunch","dinner"].map(m => `
+                <div class="day-meal-slot">
+                  <div class="day-meal-label">${m.charAt(0).toUpperCase()+m.slice(1)}</div>
+                  <div class="day-meal-name ${row[m] ? "" : "empty"}">${row[m] || "—"}</div>
+                </div>`).join("")}
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    // ── Cache ──────────────────────────────────────────────────────
+    function saveCache(data) {
+      try {
+        localStorage.setItem(CACHE_KEY,    JSON.stringify(data));
+        localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+      } catch(e) {}
+    }
+    function loadCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        const ts  = parseInt(localStorage.getItem(CACHE_TS_KEY) || "0", 10);
+        return raw ? { data: JSON.parse(raw), ts } : null;
+      } catch(e) { return null; }
+    }
+    function updateTimestamp(ts) {
+      const el = document.getElementById("last-updated");
+      if (!ts) { el.textContent = ""; return; }
+      el.textContent = `Last updated: ${new Date(ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}`;
+    }
+
+    // ── Fetch & Render ─────────────────────────────────────────────
+    async function fetchAndRender(forceRefresh = false) {
+      // Try cache first
+      if (!forceRefresh) {
+        const cached = loadCache();
+        if (cached && (Date.now() - cached.ts) < AUTO_REFRESH_MS) {
+          renderToday(cached.data);
+          renderWeek(cached.data);
+          updateTimestamp(cached.ts);
+          setStatus(null);
+          return;
+        }
+      }
+
+      setStatus("Fetching latest menu…", "loading");
+
+      try {
+        const data = await fetchSheetData();
+        saveCache(data);
+        renderToday(data);
+        renderWeek(data);
+        updateTimestamp(Date.now());
+        setStatus(null);
+      } catch(err) {
+        const cached = loadCache();
+        if (cached) {
+          renderToday(cached.data);
+          renderWeek(cached.data);
+          updateTimestamp(cached.ts);
+          setStatus(`⚠️ Couldn't fetch latest data (${err.message}). Showing cached menu.`, "error");
+        } else {
+          clearSkeletons();
+          setStatus(`❌ ${err.message}`, "error");
+        }
+      }
+    }
+
+    function clearSkeletons() {
+      const wrap = document.getElementById("today-cards");
+      wrap.innerHTML = `
+        <div class="meal-card"><div class="meal-icon">🌅</div><div class="meal-info"><div class="meal-label">Breakfast</div><div class="meal-name meal-empty">Not available</div></div></div>
+        <div class="meal-card"><div class="meal-icon">☀️</div><div class="meal-info"><div class="meal-label">Lunch</div><div class="meal-name meal-empty">Not available</div></div></div>
+        <div class="meal-card"><div class="meal-icon">🌙</div><div class="meal-info"><div class="meal-label">Dinner</div><div class="meal-name meal-empty">Not available</div></div></div>
+      `;
+    }
+
+    // ── Public actions ─────────────────────────────────────────────
+    function refreshData() {
+      fetchAndRender(true);
+    }
+
+    let weekVisible = false;
+    function toggleWeek() {
+      weekVisible = !weekVisible;
+      const section = document.getElementById("week-section");
+      const btn = document.getElementById("toggle-week-btn");
+      if (weekVisible) {
+        section.classList.add("visible");
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="18 15 12 9 6 15"/></svg>
+          Hide Full Week`;
+      } else {
+        section.classList.remove("visible");
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          View Full Week`;
+      }
+    }
+
+    // ── Init ───────────────────────────────────────────────────────
+    document.getElementById("today-date").textContent = formatDate(new Date());
+    fetchAndRender();
+
+    // Auto-refresh every 2.5 hours
+    setInterval(() => fetchAndRender(true), AUTO_REFRESH_MS);
+  </script>
+
+</body>
+
+</html>
